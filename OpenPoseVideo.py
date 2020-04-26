@@ -18,8 +18,8 @@ elif MODE is "MPI":
     POSE_PAIRS = [[0, 1], [1, 2], [2, 3], [3, 4], [1, 5], [5, 6], [6, 7], [1, 14], [14, 8], [8, 9], [9, 10], [14, 11],
                   [11, 12], [12, 13]]
 
-inWidth = 368
-inHeight = 368
+inWidth = 168
+inHeight = 168
 threshold = 0.1
 
 input_source = "sample_video.mp4"

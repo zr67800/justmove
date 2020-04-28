@@ -13,18 +13,20 @@ This file includes the main part of the UI control and navigation.
 import tkinter as tk
 import tkinter.font as tkFont
 
+import game_controller as GameController
+
 ####==== dummy component ====####
 
-#from game_controller import GameController
-import time
-class GameController:
+# #from game_controller import GameController
+# import time
+# class GameController:
 
-    def game(mode, id):
-        print (f"mode = {mode}, id = {id}")
-        for i in range(5,0, -1):
-            print(i)
-            time.sleep(1)
-        return 100, "A"
+#     def game(mode, id):
+#         print (f"mode = {mode}, id = {id}")
+#         for i in range(5,0, -1):
+#             print(i)
+#             time.sleep(1)
+#         return 100, "A"
 
 
 #from userdata import UserManager

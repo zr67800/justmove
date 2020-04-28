@@ -9,7 +9,7 @@ Outputs:
     score: num negative score of this round of game.
     grade: "S", "A", "B", "C"; "F" for fail (in pass mode)
 
-def game_controller(mode: int, id: int) -> Tuple[int, str]:
+def game(mode: int, id: int) -> Tuple[int, str]:
     ...
     return score, grade
 '''
@@ -38,28 +38,41 @@ inWidth = 128
 inHeight = 128
 threshold = 0.1
 
-cap = cv2.VideoCapture(0)
-hasFrame, frame = cap.read()
-vid_writer = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10,
-                             (frame.shape[1], frame.shape[0]))
+# cap = cv2.VideoCapture(0)
+# hasFrame, frame = cap.read()
+# vid_writer = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10,
+#                              (frame.shape[1], frame.shape[0]))
 
 net = cv2.dnn.readNetFromCaffe(protoFile, weightsFile)
-grade = 0
-score = 0
+
+# dummy value for demo
+grade = "A"
+score = 100
+
 def calculate():
     return grade
-def game_controller(mode:int,id:int):
+
+def game(mode:int,id:int):
     # mode define the mode(pass/training)
     # id define the speed
-    i = 0
+
+    cap = cv2.VideoCapture(0)
+
+    t0 = time.time()
+
     while(True):
         t = time.time()
         hasFrame, frame = cap.read()
+        # make it mirrowing
+        frame = cv2.flip(frame,1)
         frameCopy = np.copy(frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
         if not hasFrame:
             cv2.waitKey()
+            break
+        print(t-t0)
+        if t - t0 >= 10:
             break
 
         frameWidth = frame.shape[1]
@@ -114,9 +127,11 @@ def game_controller(mode:int,id:int):
                     (255, 50, 0), 2, lineType=cv2.LINE_AA)
         cv2.imshow('Output-Skeleton', frame)
 
-        vid_writer.write(frame)
-        print("\n")
-    vid_writer.release()
+        # vid_writer.write(frame)
+    # vid_writer.release()
+    cv2.destroyAllWindows() 
     return (grade,score)
 
-game_controller(1,1)
+if __name__ == "__main__":
+    print(game_controller(1,1))
+

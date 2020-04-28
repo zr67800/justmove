@@ -32,5 +32,6 @@ Temporary Items
 *.mp4
 *.mov
 *.avi
+*.pyc
 
 pose/*

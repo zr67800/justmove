@@ -32,7 +32,7 @@ Temporary Items
 *.mp4
 *.mov
 *.avi
-#*.pyc
-#__pycache__/*
+*.pyc
+__pycache__/*
 
 pose/*

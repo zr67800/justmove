@@ -11,6 +11,7 @@ This file includes the main part of the UI control and navigation.
 
 
 import tkinter as tk
+import tkinter.font as tkFont
 
 ####==== dummy component ====####
 
@@ -47,10 +48,15 @@ class JustMove(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
+        self.title_font = tkFont.Font(family = "Helvetica", size = 80)
+        self.label_font = tkFont.Font(family = "Helvetica", size = 30)
+        self.button_font = tkFont.Font(family = "Helvetica", size = 30)
+        self.small_button_font = tkFont.Font(family = "Helvetica", size = 15)
+
         self.geometry(f"{WINDOW_SIZE[0]}x{WINDOW_SIZE[1]}")
         self.title("Just Move")
 
-        self.main_window = tk.Frame(self)
+        self.main_window = tk.Frame(self, width = WINDOW_SIZE[0], height = WINDOW_SIZE[1])
         self.main_window.pack(side="top", fill="both", expand=True)
 
         self.pages = dict()
@@ -77,6 +83,8 @@ class JustMove(tk.Tk):
         self.current_result = None
 
 
+
+
         self.show_page(WelcomePage.id)
 
     def show_page(self, page_id):
@@ -97,45 +105,50 @@ class WelcomePage(tk.Frame):
     id = 1
 
     def __init__(self, parent, main):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, width = WINDOW_SIZE[0], height = WINDOW_SIZE[1])
         self.main = main
 
-        self.label = tk.Label(self, text = "Just Move")
+        
+
+        self.label = tk.Label(self, text = "Just Move", font = main.title_font)
         self.label.pack()
 
-        self.small_label = tk.Label(self, text = "keep fit with fun")
+        self.small_label = tk.Label(self, text = "keep fit with fun", font = main.label_font)
         self.small_label.pack()
 
-        self.start_button = tk.Button(self, text = "Start", command = lambda : main.show_page(LoginPage.id))
+        self.start_button = tk.Button(self, text = "Start", command = lambda : main.show_page(LoginPage.id), font = main.button_font)
         self.start_button.pack()
 
-        self.exit_button = tk.Button(self, text = "Exit" , command = main.quit)
+        self.exit_button = tk.Button(self, text = "Exit" , command = main.quit, font = main.button_font)
         self.exit_button.pack()
 
 class LoginPage(tk.Frame):
     id = 2
 
     def __init__(self, parent, main):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, width = WINDOW_SIZE[0], height = WINDOW_SIZE[1])
         self.main = main
 
-        self.label = tk.Label(self, text = "please log in")
+        self.label = tk.Label(self, text = "please log in", font = main.label_font)
         self.label.pack()
 
         #TODO later: clear default value in Entry at mouse clicks
 
-        self.username = tk.Entry(self,textvariable = tk.StringVar(self, value = "username"))
+        self.username = tk.Entry(self,textvariable = tk.StringVar(self, value = "username"), font = main.label_font)
         self.username.pack()
 
-        self.password = tk.Entry(self,textvariable = tk.StringVar(self, value = "password"))
+        self.password = tk.Entry(self,textvariable = tk.StringVar(self, value = "password"), font = main.label_font)
         self.password.pack()
 
         #small_label = tk.Label(self, text = "keep fit with fun")
-        self.login_button = tk.Button(self, text = "Login", command = self.login)
+        self.login_button = tk.Button(self, text = "Login", command = self.login, font = main.button_font)
         self.login_button.pack()
 
-        self.back_button = tk.Button(self, text = "Cancel" , command = lambda : main.show_page(WelcomePage.id))
+        self.back_button = tk.Button(self, text = "Cancel" , command = lambda : main.show_page(WelcomePage.id), font = main.button_font)
         self.back_button.pack()
+
+        self.signup_button = tk.Button(self, text = "Sign up" , command = lambda : main.show_page(SignUpPage.id), font = main.small_button_font)
+        self.signup_button.pack()
 
     def login(self):
         username_ = self.username.get()
@@ -152,24 +165,24 @@ class SignUpPage(tk.Frame):
     id = 3
 
     def __init__(self, parent, main):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, width = WINDOW_SIZE[0], height = WINDOW_SIZE[1])
         self.main = main
 
-        self.back_button = tk.Button(self, text = "back" , command = lambda : main.show_page(LoginPage.id))
-        self.back_button.pack()
+        self.back_button = tk.Button(self, text = "back" , command = lambda : main.show_page(LoginPage.id), font = main.button_font)
+        self.back_button.grid(row=0,column=0,sticky="NW")
         # TODO
 
 class PassModePage(tk.Frame):
     id = 4
 
     def __init__(self, parent, main):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, width = WINDOW_SIZE[0], height = WINDOW_SIZE[1])
         self.main = main
 
-        self.label = tk.Label(self, text = "Pass Mode")
+        self.label = tk.Label(self, text = "Pass Mode", font = main.label_font)
         self.label.pack()
 
-        self.start_button = tk.Button(self, text = "Start" , command = lambda : main.show_page(LevelSelectionPage.id))
+        self.start_button = tk.Button(self, text = "Start" , command = lambda : main.show_page(LevelSelectionPage.id), font = main.button_font)
         self.start_button.pack()
 
         self.pass_mode_button = tk.Button(self, text = "Pass Mode" , command = lambda : main.show_page(PassModePage.id), state=tk.DISABLED)
@@ -186,10 +199,10 @@ class TrainingModePage(tk.Frame):
     id = 5
 
     def __init__(self, parent, main):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, width = WINDOW_SIZE[0], height = WINDOW_SIZE[1])
         self.main = main
 
-        self.label = tk.Label(self, text = "Training Mode")
+        self.label = tk.Label(self, text = "Training Mode", font = main.label_font)
         self.label.pack()
 
 
@@ -208,10 +221,10 @@ class RankPage(tk.Frame):
     id = 6
 
     def __init__(self, parent, main):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, width = WINDOW_SIZE[0], height = WINDOW_SIZE[1])
         self.main = main
 
-        self.label = tk.Label(self, text = "Rank")
+        self.label = tk.Label(self, text = "Rank", font = main.label_font)
         self.label.pack()
 
         # TODO
@@ -229,12 +242,14 @@ class MyPage(tk.Frame):
     id = 7
 
     def __init__(self, parent, main):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, width = WINDOW_SIZE[0], height = WINDOW_SIZE[1])
         self.main = main
 
-        self.label = tk.Label(self, text = "My infomation")
+        self.label = tk.Label(self, text = "My infomation", font = main.label_font)
         self.label.pack()
 
+        self.logout_button = tk.Button(self, text = "Log out" , command = lambda : main.show_page(LoginPage.id), font = main.button_font)
+        self.logout_button.pack()
         # TODO
 
         self.pass_mode_button = tk.Button(self, text = "Pass Mode" , command = lambda : main.show_page(PassModePage.id))
@@ -250,13 +265,13 @@ class LevelSelectionPage(tk.Frame):
     id = 8
 
     def __init__(self, parent, main):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, width = WINDOW_SIZE[0], height = WINDOW_SIZE[1])
         self.main = main
 
         self.back_button = tk.Button(self, text = "back" , command = lambda : main.show_page(PassModePage.id))
         self.back_button.pack()
 
-        self.label = tk.Label(self, text = "Pass Mode")
+        self.label = tk.Label(self, text = "Pass Mode", font = main.label_font)
         self.label.pack()
 
         self.levels = [
@@ -283,7 +298,7 @@ class ResultPage(tk.Frame):
     id = 9
 
     def __init__(self, parent, main):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, width = WINDOW_SIZE[0], height = WINDOW_SIZE[1])
         self.main = main
 
         self.bind("<<OnRaise>>", self.on_raise)
@@ -292,9 +307,9 @@ class ResultPage(tk.Frame):
         self.score = tk.StringVar()
         self.msg = tk.StringVar()
 
-        self.grade_label = tk.Label(self, textvariable = self.grade)
-        self.score_label = tk.Label(self, textvariable = self.score)
-        self.msg_label = tk.Label(self, textvariable = self.msg)
+        self.grade_label = tk.Label(self, textvariable = self.grade, font = main.title_font)
+        self.score_label = tk.Label(self, textvariable = self.score, font = main.label_font)
+        self.msg_label = tk.Label(self, textvariable = self.msg, font = main.label_font)
 
         self.grade_label.pack()
         self.score_label.pack()
@@ -304,7 +319,7 @@ class ResultPage(tk.Frame):
         self.pass_msg = "Congratulations!\nYou did a great job to unlock the next level!"
         self.fail_msg = "Try again, you can do better"
 
-        self.cont_button = tk.Button(self, text = "OK", command = lambda : main.show_page(LevelSelectionPage.id))
+        self.cont_button = tk.Button(self, text = "OK", command = lambda : main.show_page(LevelSelectionPage.id), font = main.button_font)
         self.cont_button.pack()
 
     def on_raise(self, event):
@@ -325,7 +340,7 @@ class ResultPage(tk.Frame):
 class BlankPage(tk.Frame):
     id = 0
     def __init__(self, parent, main):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, width = WINDOW_SIZE[0], height = WINDOW_SIZE[1])
     
 ####==== Main ====####
 

@@ -18,6 +18,8 @@ import cv2
 import time
 import numpy as np
 
+import pygame
+
 ## refactoring:
 
 class Detector:
@@ -73,22 +75,29 @@ class Detector:
             y = (frameHeight * point[1]) / H
 
             if prob > self.threshold:
-                cv2.circle(frameCopy, (int(x), int(y)), 8, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
-                cv2.putText(frameCopy, "{}".format(i), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, lineType=cv2.LINE_AA)
+                #cv2.circle(frame, (int(x), int(y)), 8, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
+                #cv2.putText(frame, "{}".format(i), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, lineType=cv2.LINE_AA)
                 # Add the point to the list if the probability is greater than the threshold
                 points.append((int(x), int(y)))
             else:
                 points.append(None)
 
         # logging
+        print("detector: ", end=',')
         for i in points:
-            print(i,end=',')
+            #if i is not None:
+                print(i,end=',')
+        print()
 
         return points
 
 class Grader:
     def __init__(self, mode, id):
         pass
+
+    def evaluate(self, key_points, t):
+        pass
+
 
     def get_final_grade(self, score):
         return "A"
@@ -97,6 +106,21 @@ class Visualiser:
     def raw(self, frame):
         return frame
 
+    def show(self, frame):
+        cv2.imshow('cam', frame)
+        cv2.waitKey(1)
+
+class OneTimeAudioPlayer:
+    def __init__(self, sound_file):
+        pygame.mixer.init()
+        pygame.mixer.music.load(sound_file)
+
+    def play(self):
+        pygame.mixer.music.play()
+    
+    def stop(self):
+        pygame.mixer.music.stop()
+        #pygame.mixer.music.unload()
 
     
 
@@ -105,6 +129,13 @@ def game(mode, id):
     # id define the level/training target
     # They are passed to game data feeders, and has nothing to do with this game controller
 
+    # read info from game data 
+        # dummy things for testing 
+    music_file = './media/music_01.mp3'
+
+
+        # end
+
     # control the cam
     cap = cv2.VideoCapture(0)
 
@@ -112,29 +143,43 @@ def game(mode, id):
     detector = Detector(mode = "MPI", in_width = 128, in_height = 128, threshold = 0.1)
 
     # grader:
-    grader = Grader()
+    grader = Grader(mode, id)
 
     # visualiser
     visualiser = Visualiser()
 
-    # time control for testing
+    # audio player
+    music = OneTimeAudioPlayer(music_file)
+
+    # time control
     t0 = time.time()
+
+    music.play()
+
+    # consider to add "ready to start": only when some certain set of points are detected then the game starts
+    # or only when a "ready pose" gets enough score?
 
     while True:
         # time control for testing
-        t = time.time()
-        if t - t0 >= 10:
+        t = time.time() - t0
+        print (t)
+        if t >= 10:
             break
 
         # capture a frame
         hasFrame, frame = cap.read()
         frame = cv2.flip(frame,1)
 
-        key_points = detector(frame)
         
+        key_points = detector(frame)
+        grader.evaluate(key_points, t)
+
+        visualiser.show(frame)
+        
+    music.stop()
 
     score = 100
-    grade = grade.get_final_grade(score)
+    grade = grader.get_final_grade(score)
 
     return (grade, score)
 

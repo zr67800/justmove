@@ -12,9 +12,12 @@ This file includes the main part of the UI control and navigation.
 
 import tkinter as tk
 import tkinter.font as tkFont
-
+from tkinter import StringVar
+import tkinter.messagebox as messagebox
 import game_controller as GameController
-
+import xlrd
+import base64
+import openpyxl
 ####==== dummy component ====####
 
 # #from game_controller import GameController
@@ -31,8 +34,81 @@ import game_controller as GameController
 
 #from userdata import UserManager
 class UserManager:
+
+    def signup(username, password):
+        # save it to files
+        filePath = "user&pass.xlsx"
+        flag=0
+        wb = openpyxl.load_workbook(filePath)
+        ws = wb['Sheet']
+        for i in ws:
+            print(i)
+            if(username==i[0]):
+                print("This name has been used!")
+                flag=1
+
+        if(flag==0):
+            ws.append([username,base64.b64encode(password)])
+            wb.save(filePath)
+            return True
+        else:
+            return False
     def login(username, password):
+        # verify user
+        dataresult = []
+        # needs to be encode
+        filePath = "user&pass.xlsx"
+        sheetname = "Sheet"
+        data_xlsl = xlrd.open_workbook(filePath)
+        if not data_xlsl:
+            return False
+        table = data_xlsl.sheet_by_name(sheetname)
+        for i in range(0, table.nrows):
+            dataresult.append(table.row_values(i))
+        # print(dataresult)
+        for i in dataresult:
+            print(str(base64.b64decode(i[1]),encoding="utf-8"))
+            if(i[0]==username and str(base64.b64decode(i[1]),encoding="utf-8")==password):
+                return True
+        return False
+class leaderboard():
+    def __init__(self):
+        #
+        self.list=[]
+    def set(username,score):
+        filePath="user&score.xlsx"
+        flag = 0
+        wb = openpyxl.load_workbook(filePath)
+        ws = wb['Sheet1']
+        for i in ws:
+            i[1]+=score
+            flag=1
+        if flag==0:
+            ws.append([username, score])
+            wb.save(filePath)
         return True
+
+
+    def get(username):
+        dataresult = []
+        # needs to be encode
+        filePath = "user&score.xlsx"
+        sheetname = "Sheet1"
+        data_xlsl = xlrd.open_workbook(filePath)
+        if not data_xlsl:
+            return False
+        table = data_xlsl.sheet_by_name(sheetname)
+        for i in range(0, table.nrows):
+            dataresult.append(table.row_values(i))
+        dic = {dataresult[i]:dataresult[i+1] for i in range(0,len(dataresult),2)}
+        keys = dic.keys()
+        keys.sort()
+        return map(dic.get, keys)
+
+        #keys = dic.keys()
+        #keys.sort()
+        #return map(dic.get, keys)
+    # def RankInOneLevel(self,username,score):
 
 
 ####==== Meta parameters ====####
@@ -49,7 +125,7 @@ FAIL = {"F"}
 class JustMove(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-
+        # self.window = tk.Tk()
         self.title_font = tkFont.Font(family = "Helvetica", size = 80)
         self.label_font = tkFont.Font(family = "Helvetica", size = 30)
         self.button_font = tkFont.Font(family = "Helvetica", size = 30)
@@ -73,10 +149,8 @@ class JustMove(tk.Tk):
                     MyPage,             # id = 7
                     LevelSelectionPage, # id = 8
                     ResultPage,         # id = 9
-
-
-
                   }:
+            # init every pages
             page_id = F.id 
             frame = F(self.main_window, self)
             frame.grid(row=0, column=0, sticky="nsew")
@@ -84,11 +158,8 @@ class JustMove(tk.Tk):
 
         self.current_result = None
 
-
-
-
         self.show_page(WelcomePage.id)
-
+    # show pages based page id
     def show_page(self, page_id):
         frame = self.pages[page_id]
         frame.tkraise()
@@ -105,7 +176,6 @@ class JustMove(tk.Tk):
 
 class WelcomePage(tk.Frame):
     id = 1
-
     def __init__(self, parent, main):
         tk.Frame.__init__(self, parent, width = WINDOW_SIZE[0], height = WINDOW_SIZE[1])
         self.main = main
@@ -130,12 +200,12 @@ class LoginPage(tk.Frame):
     def __init__(self, parent, main):
         tk.Frame.__init__(self, parent, width = WINDOW_SIZE[0], height = WINDOW_SIZE[1])
         self.main = main
-
+        # window = tk.Tk()
         self.label = tk.Label(self, text = "please log in", font = main.label_font)
         self.label.pack()
 
         #TODO later: clear default value in Entry at mouse clicks
-
+        
         self.username = tk.Entry(self,textvariable = tk.StringVar(self, value = "username"), font = main.label_font)
         self.username.pack()
 
@@ -152,27 +222,53 @@ class LoginPage(tk.Frame):
         self.signup_button = tk.Button(self, text = "Sign up" , command = lambda : main.show_page(SignUpPage.id), font = main.small_button_font)
         self.signup_button.pack()
 
+
     def login(self):
         username_ = self.username.get()
         password_ = self.password.get()
         print(f"Login: {username_}, {password_}")
         allowed = UserManager.login(username = username_, password = password_)
+        print(allowed)
         if allowed:
+            print("Login secsessful!")
             self.main.show_page(PassModePage.id)
         else:
             # TODO: handel wrong password/non existing username
-            pass
+            messagebox.showinfo(title="error", message="Your username or password is incorrect!")
+            self.main.show_page(LoginPage.id)
 
 class SignUpPage(tk.Frame):
     id = 3
-
+    # needs future decorate
     def __init__(self, parent, main):
         tk.Frame.__init__(self, parent, width = WINDOW_SIZE[0], height = WINDOW_SIZE[1])
         self.main = main
 
         self.back_button = tk.Button(self, text = "back" , command = lambda : main.show_page(LoginPage.id), font = main.button_font)
         self.back_button.grid(row=0,column=0,sticky="NW")
+        tk.Label(self, text='Username:', font=main.button_font).place(x=400, y=150)
+        self.username = StringVar()
+        entry_usr_name = tk.Entry(self, textvariable=self.username)
+        entry_usr_name.place(x=600, y=150)
+        tk.Label(self, text='Password:', font=main.button_font).place(x=400, y=200)
+        self.password = StringVar()
+        entry_password = tk.Entry(self,textvariable=self.password)
+        entry_password.place(x=600,y=200)
+
+        self.registerButton=tk.Button(self, text = "Sign Up", command = self.signup, font = main.button_font)
+        self.registerButton.place(x=600,y=300)
+
+
         # TODO
+    def signup(self):
+        username_ = self.username.get()
+        password_ = self.password.get()
+        register = UserManager.signup(username=username_, password=password_)
+        if register:
+            self.main.show_page(LoginPage.id)
+        else:
+            messagebox.showinfo(title="error", message="Registration failed")
+            self.main.show_page(SignUpPage.id)
 
 class PassModePage(tk.Frame):
     id = 4
@@ -294,6 +390,7 @@ class LevelSelectionPage(tk.Frame):
         score, grade = GameController.game(mode, level_id)
         print(score, grade)
         self.main.set_score_and_grade(score, grade)
+        # one level get one resultpage so how to show different content
         self.main.show_page(ResultPage.id)
 
 class ResultPage(tk.Frame):
@@ -333,7 +430,10 @@ class ResultPage(tk.Frame):
         else:
             self.msg.set(self.pass_msg)
             # TODO: deal with leaderboard and progress (or should this be done within GameController?)
-        
+    #def add(self,username,score):
+
+    # excel to record username-grades
+
 
 
 

@@ -85,7 +85,7 @@ for pair in POSE_PAIRS:
 #cv2.putText(frame, "time taken = {:.2f} sec".format(time.time() - t), (50, 50), cv2.FONT_HERSHEY_COMPLEX, .8, (255, 50, 0), 2, lineType=cv2.LINE_AA)
 cv2.putText(frame, "OpenPose using OpenCV", (50, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 50, 0), 2, lineType=cv2.LINE_AA)
 cv2.imwrite("./media/actions/target/"+basename, frame)
-cv2.imshow('Output-Keypoints', frameCopy)
+#cv2.imshow('Output-Keypoints', frameCopy)
 #cv2.imshow('Output-Skeleton', frame)
-cv2.waitKey()
+#cv2.waitKey()
 

@@ -21,6 +21,8 @@ import shelve
 
 import pygame
 
+from game_data import GameDataLoader
+
 ## refactoring:
 
 class Detector:
@@ -84,7 +86,7 @@ class Detector:
                 points.append(None)
 
         # logging
-        print("detector: ", end=',')
+        print("detector: ", end='  ')
         for i in points:
             #if i is not None:
                 print(i,end=',')
@@ -94,26 +96,155 @@ class Detector:
 
 ## NOTE: it works only when Detector is configured as "MPI"
 class Grader:
-    def __init__(self, mode, id):
-        pass
+    def __init__(self, game_data):
+        self.actions = game_data.actions
+        self.target_dict = game_data.target_dict
+
+        self.scores = [[] for i in self.actions]
+        self.score = None
+
+        for key in self.target_dict:
+            self.target_dict[key] = self._normalise(list(self.target_dict[key]))
+
+    def _find(self, t):
+        for idx, action in enumerate(self.actions):
+            #print(f"_find: t = {t}, time slot = {action[0]}, {action[0]+action[1]}")
+            if t >= action[0] and t < action[0]+action[1]:
+                return idx
+        #assert False
+        return None
 
     def evaluate(self, key_points, t):
-        pass
+        action_idx = self._find(t)
+        print(f"grader: action_seq_idx = {action_idx}")
+        if action_idx is not None:
+            print(f"grader: t = {t}, action = {self.actions[action_idx][3]}")
+            score = self._evaluate_frame(key_points, self.target_dict[self.actions[action_idx][3]])
+            self.scores[action_idx].append(score)
+            return score
+        return None
+
+    def _normalise(self, points):
+        '''normalise the points. point[14] relocates to (0,0) and dist of point 0 and point 14 is 1'''
+        if points[0] is None or points[14] is None:
+            return None
+
+        dx, dy = points[14]
+        for i,p in enumerate(points):
+            if p is not None:
+                points[i] = list(p)
+                points[i][0] -= dx
+                points[i][1] -= dy
+        
+        dist = ((points[0][0])**2 + (points[0][1])**2) ** 0.5
+        for i,p in enumerate(points):
+            if p is not None:
+                p[0] /= dist
+                p[1] /= dist
+        return points
+
+    def _evaluate_frame(self,key_points, targets):
+        # TODO
+        key_points = self._normalise(key_points)
+
+        if key_points is None: #cannot be normalised
+            print("_evaluate_frame: cannot normalise")
+            return 0
+        print("_evaluate_frame: normalise success! ")
+        print(f"    {key_points}")
+        print(f"    {targets}")
+        points_in_use = [0,1,2,3,4,5,6,7,8,10,11,12,14]
+        n = len(points_in_use)
+
+        frame_score = 0
+        for i in points_in_use:
+            target = targets[i]
+            user_point = key_points[i]
+            if target is not None and user_point is not None:
+                dist = ((target[0]-user_point[0])**2 + (target[1]-user_point[1])**2) ** 0.5
+                frame_score += 10 * 2**(-dist)
+
+        return frame_score/n
+
+    def get_target(self, t):
+        action_idx = self._find(t)
+        if action_idx is not None:
+            print(f"get_target: t = {t}, action = {self.actions[action_idx][3]}")
+            target = self.target_dict[self.actions[action_idx][3]]
+            return target
+        return None
 
 
-    def get_final_grade(self, score):
-        return "A"
+    def get_score(self):
+        score = 0
+        for i, action in enumerate(self.actions):
+            if len(self.scores[i])>0:
+                if action[2] == 0:
+                    score += max(self.scores[i])
+                else:
+                    score += sum(self.scores[i])/len(self.scores[i])
+        self.score = score
+        return score
+    
+    def get_grade(self):
+        n = len(self.actions)
+        if self.score >= n*9:
+            return "A"
+        elif self.score >= n*7:
+            return "B"
+        elif self.score >= n*3:
+            return "C"
+        else:
+            return "F"
 
 class VideoProcessor:
-    def __init__(self):
+    def __init__(self, pose_pairs):
         self.camera = cv2.VideoCapture(0)
         self.current_frame = None
+        
+        self.POSE_PAIRS = pose_pairs
+        self.backSub = cv2.createBackgroundSubtractorMOG2()
     
     def capture(self):
         hasFrame, frame = self.camera.read()
         frame = cv2.flip(frame,1)
         self.current_frame = frame
         return self.current_frame
+
+    def draw(self, points, is_target):
+        if points is None:
+            return
+
+        frame = self.current_frame
+        screen_x, screen_y = 1280, 720
+        scale_factor = screen_y//8*3
+
+        if is_target == True:
+            colour = (200, 200, 200)
+            points_ = []
+            for p in points:
+                if p is not None:
+                    points_.append((int(p[0]*scale_factor + screen_x//2), int(p[1]*scale_factor + screen_y//2)))
+                else:
+                    points_.append(None)
+            points = points_
+        else:
+            colour = (200, 200, 0)
+
+        for pair in self.POSE_PAIRS:
+            partA = pair[0]
+            partB = pair[1]
+            #print(points[partA],points[partB],end='')
+            if points[partA] and points[partB]:
+                cv2.line(frame, points[partA], points[partB], colour, 3, lineType=cv2.LINE_AA)
+                cv2.circle(frame, points[partA], 8, colour, thickness=-1, lineType=cv2.FILLED)
+                cv2.circle(frame, points[partB], 8, colour, thickness=-1, lineType=cv2.FILLED)
+        self.current_frame = frame
+
+    def _bg_remove(self):
+        #not in use
+        mask = self.backSub.apply(self.current_frame)
+        self.current_frame = cv2.bitwise_or(self.current_frame, self.current_frame, mask=mask)
 
     def show(self):
         cv2.imshow('cam', self.current_frame)
@@ -132,8 +263,6 @@ class OneTimeAudioPlayer:
         #pygame.mixer.music.unload()
 
 
-class GameDataLoader:
-    def __init__(self, mode, id):
 
 
 def game(mode, id):
@@ -141,24 +270,20 @@ def game(mode, id):
     # id define the level/training target
     # They are passed to game data feeders, and has nothing to do with this game controller
 
-    # read info from game data 
-        # dummy things for testing 
-    music_file = './media/1_0.mp3'
-
-
-        # end
+    # read info from game data:
+    game_data = GameDataLoader(mode, id)
 
     # detector:
-    detector = Detector(mode = "MPI", in_width = 128, in_height = 128, threshold = 0.1)
+    detector = Detector(mode = "MPI", in_width = 128, in_height = 128, threshold = 0.05)
 
     # grader:
-    grader = Grader(mode, id)
+    grader = Grader(game_data)
 
     # video processor
-    video = VideoProcessor()
+    video = VideoProcessor(pose_pairs = detector.POSE_PAIRS)
 
     # audio player
-    music = OneTimeAudioPlayer(music_file)
+    music = OneTimeAudioPlayer(game_data.music)
 
     # time control
     t0 = time.time()
@@ -169,36 +294,32 @@ def game(mode, id):
     # or only when a "ready pose" gets enough score?
 
     while True:
-        # time control for testing
+        # time control
         t = time.time() - t0
         print (t)
-        if t >= 10:
+        if t >  game_data.max_time:
             break
 
         # capture a frame
         frame = video.capture()
+        video.draw(grader.get_target(t),True)
         
         key_points = detector(frame)
+        video.draw(key_points, False)
         grader.evaluate(key_points, t)
 
         video.show()
-        
+    
+
     music.stop()
 
-    score = 100
-    grade = grader.get_final_grade(score)
-
+    score = grader.get_score()
+    grade = grader.get_grade()
+    print(grader.scores)
     return (grade, score)
 
 
 
-
-# dummy value for demo
-grade = "A"
-score = 100
-
-def calculate():
-    return grade
 
 def game_(mode:int,id:int):
     # mode define the mode(pass/training)

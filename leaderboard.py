@@ -1,36 +1,32 @@
-import xlrd
-import base64
 import openpyxl
 
-class leaderboard():
-    def __init__(self):
-        self.list=[]
-    def set(username,score):
+def add(username,score):
         filePath="user&score.xlsx"
         flag = 0
         wb = openpyxl.load_workbook(filePath)
-        ws = wb['Sheet1']
+        ws = wb['Sheet']
         for i in ws:
-            i[1]+=score
-            flag=1
+            if i[0].value == username:
+                i[1]+=score
+                flag=1
+                res = i[1]
+                break
         if flag==0:
             ws.append([username, score])
-            wb.save(filePath)
-        return True
+            res = score
+        wb.save(filePath)
+        return res
 
 
-    def get(username):
-        dataresult = []
-        # needs to be encode
-        filePath = "user&score.xlsx"
-        sheetname = "Sheet1"
-        data_xlsl = xlrd.open_workbook(filePath)
-        if not data_xlsl:
-            return False
-        table = data_xlsl.sheet_by_name(sheetname)
-        for i in range(0, table.nrows):
-            dataresult.append(table.row_values(i))
-        dic = {dataresult[i]:dataresult[i+1] for i in range(0,len(dataresult),2)}
-        keys = dic.keys()
-        keys.sort()
-        return map(dic.get, keys)
+def get(username):
+        filePath="user&score.xlsx"
+        flag = 0
+        wb = openpyxl.load_workbook(filePath)
+        ws = wb['Sheet']
+
+        result = []
+        for i in ws:
+            result.append((i[0].value,int(i[1].value)))
+
+        result.sort(key = lambda x: x[1], reverse = True)
+        return result

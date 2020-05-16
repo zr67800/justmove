@@ -17,6 +17,7 @@ def game(mode: int, id: int) -> Tuple[int, str]:
 import cv2
 import time
 import numpy as np
+import shelve
 
 import pygame
 
@@ -91,6 +92,7 @@ class Detector:
 
         return points
 
+## NOTE: it works only when Detector is configured as "MPI"
 class Grader:
     def __init__(self, mode, id):
         pass
@@ -102,12 +104,19 @@ class Grader:
     def get_final_grade(self, score):
         return "A"
 
-class Visualiser:
-    def raw(self, frame):
-        return frame
+class VideoProcessor:
+    def __init__(self):
+        self.camera = cv2.VideoCapture(0)
+        self.current_frame = None
+    
+    def capture(self):
+        hasFrame, frame = self.camera.read()
+        frame = cv2.flip(frame,1)
+        self.current_frame = frame
+        return self.current_frame
 
-    def show(self, frame):
-        cv2.imshow('cam', frame)
+    def show(self):
+        cv2.imshow('cam', self.current_frame)
         cv2.waitKey(1)
 
 class OneTimeAudioPlayer:
@@ -122,7 +131,10 @@ class OneTimeAudioPlayer:
         pygame.mixer.music.stop()
         #pygame.mixer.music.unload()
 
-    
+
+class GameDataLoader:
+    def __init__(self, mode, id):
+
 
 def game(mode, id):
     # mode define the mode(pass/training)
@@ -131,13 +143,10 @@ def game(mode, id):
 
     # read info from game data 
         # dummy things for testing 
-    music_file = './media/music_01.mp3'
+    music_file = './media/1_0.mp3'
 
 
         # end
-
-    # control the cam
-    cap = cv2.VideoCapture(0)
 
     # detector:
     detector = Detector(mode = "MPI", in_width = 128, in_height = 128, threshold = 0.1)
@@ -145,8 +154,8 @@ def game(mode, id):
     # grader:
     grader = Grader(mode, id)
 
-    # visualiser
-    visualiser = Visualiser()
+    # video processor
+    video = VideoProcessor()
 
     # audio player
     music = OneTimeAudioPlayer(music_file)
@@ -167,14 +176,12 @@ def game(mode, id):
             break
 
         # capture a frame
-        hasFrame, frame = cap.read()
-        frame = cv2.flip(frame,1)
-
+        frame = video.capture()
         
         key_points = detector(frame)
         grader.evaluate(key_points, t)
 
-        visualiser.show(frame)
+        video.show()
         
     music.stop()
 

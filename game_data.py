@@ -12,7 +12,7 @@ import shelve
 class GameDataLoader:
     def __init__(self, mode, id):
         # dummy things for testing 
-        self.music = './media/1_0.mp3'
+        self.music = './media/music/1_0.mp3'
         #self.n_actions = 12
         self.max_time = 30
         self.actions = [(10,1,0,1), #(start_time, duration, is_persistent, action id)

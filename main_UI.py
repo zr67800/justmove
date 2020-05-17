@@ -14,7 +14,6 @@ import tkinter as tk
 import tkinter.font as tkFont
 
 import game_controller as GameController
-import leaderboard
 from user_manager import UserManager
 user = UserManager()
 
@@ -211,10 +210,14 @@ class SignUpPage(tk.Frame):
     def signup(self):
         username_ = self.username.get()
         password_ = self.password.get()
+        if len(username_)<3 or len(password_)<3:
+            self._clear_done = False
+            self._clear(None)
+            return
+
         print(f"Sign up: {username_}, {password_}")
         allowed = user.signup(username = username_, password = password_)
         if allowed:
-            leaderboard.add(username_, 0)
             self.main.show_page(LoginPage.id)
         else:
             self._clear_done = False
@@ -247,7 +250,7 @@ class PassModePage(tk.Frame):
         
 
 class TrainingModePage(tk.Frame):
-    # TODO
+    # DONE
     id = 5
 
     def __init__(self, parent, main):
@@ -258,8 +261,10 @@ class TrainingModePage(tk.Frame):
         self.bg = tk.Label(self, image = imgs["training"])
         self.bg.place(x=0, y=0, relwidth=1, relheight=1)
 
-
-        # TODO arm, thigh
+        self.arm_button = tk.Button(self, text = ">>>" , command = lambda : self.training(1), font = main.small_button_font)
+        self.arm_button.place(x = 885, y = 255, width = 40, height = 25)
+        self.thigh_button = tk.Button(self, text = ">>>" , command = lambda : self.training(2), font = main.small_button_font)
+        self.thigh_button.place(x = 870, y = 460, width = 40, height = 25)
 
         self.pass_mode_button = tk.Button(self, text = "Pass Mode" , command = lambda : main.show_page(PassModePage.id), font = main.small_button_font)
         self.training_mode_button = tk.Button(self, text = "Training Mode" , command = lambda : main.show_page(TrainingModePage.id), state=tk.DISABLED, font = main.small_button_font)
@@ -270,6 +275,15 @@ class TrainingModePage(tk.Frame):
         self.rank_button.place(x = X//2+40, y = Y//2+250, width = 120, height = 25)
         self.my_button.place(x = X//2+240, y = Y//2+250, width = 120, height = 25)
 
+    def training(self, id):
+        # 1: arm, 2: thigh
+        self.main.show_page(BlankPage.id)
+        mode = 1 # training mode
+        score, grade = GameController.game(mode, id)
+        print(score, grade)
+        self.main.set_score_and_grade(score, grade)
+        self.main.show_page(ResultPage.id)
+        
 class RankPage(tk.Frame):
     # DONE
     id = 6
@@ -308,7 +322,7 @@ class RankPage(tk.Frame):
         self.my_button.place(x = X//2+240, y = Y//2+250, width = 120, height = 25)
 
     def show_rank(self,event):
-        ranks = leaderboard.get(user.get_user())
+        ranks = user.get_leaderboard()
         print (ranks)
         for i in range (min(len(ranks), 5)):
             self.b[i]['text'] = ranks[i][0]
@@ -317,7 +331,7 @@ class RankPage(tk.Frame):
         
 
 class MyPage(tk.Frame):
-    # TODO
+    # DONE
     id = 7
 
     def __init__(self, parent, main):
@@ -325,12 +339,26 @@ class MyPage(tk.Frame):
         tk.Frame.__init__(self, parent, width = X, height = Y)
         self.main = main
 
+        self.bind("<<OnRaise>>", self.get_info)
+
         self.bg = tk.Label(self, image = imgs["my"])
         self.bg.place(x=0, y=0, relwidth=1, relheight=1)
 
-        self.logout_button = tk.Button(self, text = "Log out" , command = lambda : main.show_page(LoginPage.id), font = main.button_font)
-        self.logout_button.pack()
-        # TODO
+        self.name1 = tk.Label(self, text = "Name: ", font = main.small_button_font)
+        self.name2 = tk.Label(self, text = "-", font = main.small_button_font)
+        self.name1.place(x = X//2 - 110, y = Y//2 - 80, width = 80, height = 25)
+        self.name2.place(x = X//2 + 30, y = Y//2 - 80, width = 80, height = 25)
+
+        self.score1 = tk.Label(self, text = "Score: ", font = main.small_button_font)
+        self.score2 = tk.Label(self, text = "-", font = main.small_button_font)
+        self.score1.place(x = X//2 - 110, y = Y//2, width = 80, height = 25)
+        self.score2.place(x = X//2 + 30, y = Y//2, width = 80, height = 25)
+
+        self.settings_button = tk.Button(self, text = "Settings" , command = self.settings, font = main.button_font)
+        self.settings_button.place(x = X//2 - 60, y = Y//2 + 80, width = 120, height = 40)
+
+        self.logout_button = tk.Button(self, text = "Log out" , command = self.logout, font = main.button_font)
+        self.logout_button.place(x = X//2 - 60, y = Y//2 + 150, width = 120, height = 40)
 
         self.pass_mode_button = tk.Button(self, text = "Pass Mode" , command = lambda : main.show_page(PassModePage.id), font = main.small_button_font)
         self.training_mode_button = tk.Button(self, text = "Training Mode" , command = lambda : main.show_page(TrainingModePage.id), font = main.small_button_font)
@@ -341,37 +369,56 @@ class MyPage(tk.Frame):
         self.rank_button.place(x = X//2+40, y = Y//2+250, width = 120, height = 25)
         self.my_button.place(x = X//2+240, y = Y//2+250, width = 120, height = 25)
 
+    def logout(self):
+        user.logout()
+        self.main.show_page(LoginPage.id)
+
+    def get_info(self, event):
+        username = user.get_user()
+        self.name2["text"] = username
+        score = user.get_score()
+        self.score2["text"] = score
+    def settings(self):
+        print(NotImplemented)
+
+
 class LevelSelectionPage(tk.Frame):
-    # TODO
+    # DONE
     id = 8
 
     def __init__(self, parent, main):
-        tk.Frame.__init__(self, parent, width = WINDOW_SIZE[0], height = WINDOW_SIZE[1])
+        X, Y = WINDOW_SIZE
+        tk.Frame.__init__(self, parent, width = X, height = Y)
         self.main = main
 
-        self.back_button = tk.Button(self, text = "back" , command = lambda : main.show_page(PassModePage.id))
-        self.back_button.pack()
+        self.bind("<<OnRaise>>", self.get_progress)
 
-        self.label = tk.Label(self, text = "Pass Mode", font = main.label_font)
-        self.label.pack()
+        self.bg = tk.Label(self, image = imgs["pass_mode"])
+        self.bg.place(x=0, y=0, relwidth=1, relheight=1)
 
-        self.levels = [
-            tk.Button(self, text = "Level 1", command = lambda : self.level(1)),
-            tk.Button(self, text = "Level 2", command = lambda : self.level(2)),
-            tk.Button(self, text = "Level 3", command = lambda : self.level(3)),
-            tk.Button(self, text = "Level 4", command = lambda : self.level(4)),
-            tk.Button(self, text = "Level 5", command = lambda : self.level(5)),
-        ]
-        for l in self.levels:
-            l.pack()
+        self.back_button = tk.Button(self, text = "back" , command = lambda : main.show_page(PassModePage.id),  font = main.button_font)
+        self.back_button.place(x = X//2 - 60, y = Y//2 + 150, width = 120, height = 40)
 
-        # TODO
+        self.levels = {}
+        for i in range(5):
+            self.levels[i] = tk.Button(self, text = f"Level {i}", command = lambda : self.level(i), font = main.small_button_font, state=tk.DISABLED)
+            self.levels[i].place(x = X//2 - 40, y = Y//2 - 140 + i*60, width = 80, height = 25)
+
+    def get_progress(self, event):
+        progress = user.get_progress()
+        for i in range(min(progress+1, 5)):
+            self.levels[i]["state"] = tk.NORMAL
 
     def level(self, level_id):
         self.main.show_page(BlankPage.id)
         mode = 0 # pass mode
         score, grade = GameController.game(mode, level_id)
         print(score, grade)
+        if grade not in FAIL:
+            # passed, update user progress
+            progress = max(user.get_progress(), level_id+1)
+            user.set_progress(progress)
+
         self.main.set_score_and_grade(score, grade)
         self.main.show_page(ResultPage.id)
 

@@ -64,7 +64,7 @@ for i in range(nPoints):
     else:
         points.append(None)
 
-basename = os.path.basename(FLAGS.input)\
+basename = os.path.basename(FLAGS.input)
 
 print (basename)
 

@@ -346,13 +346,18 @@ class MyPage(tk.Frame):
 
         self.name1 = tk.Label(self, text = "Name: ", font = main.small_button_font)
         self.name2 = tk.Label(self, text = "-", font = main.small_button_font)
-        self.name1.place(x = X//2 - 110, y = Y//2 - 80, width = 80, height = 25)
-        self.name2.place(x = X//2 + 30, y = Y//2 - 80, width = 80, height = 25)
+        self.name1.place(x = X//2 - 110, y = Y//2 - 160, width = 80, height = 25)
+        self.name2.place(x = X//2 + 30, y = Y//2 - 160, width = 80, height = 25)
 
         self.score1 = tk.Label(self, text = "Score: ", font = main.small_button_font)
         self.score2 = tk.Label(self, text = "-", font = main.small_button_font)
-        self.score1.place(x = X//2 - 110, y = Y//2, width = 80, height = 25)
-        self.score2.place(x = X//2 + 30, y = Y//2, width = 80, height = 25)
+        self.score1.place(x = X//2 - 110, y = Y//2 - 80, width = 80, height = 25)
+        self.score2.place(x = X//2 + 30, y = Y//2 - 80, width = 80, height = 25)
+
+        self.prog1 = tk.Label(self, text = "Progress: ", font = main.small_button_font)
+        self.prog2 = tk.Label(self, text = "Level 0", font = main.small_button_font)
+        self.prog1.place(x = X//2 - 110, y = Y//2, width = 80, height = 25)
+        self.prog2.place(x = X//2 + 30, y = Y//2, width = 80, height = 25)
 
         self.settings_button = tk.Button(self, text = "Settings" , command = self.settings, font = main.button_font)
         self.settings_button.place(x = X//2 - 60, y = Y//2 + 80, width = 120, height = 40)
@@ -378,6 +383,9 @@ class MyPage(tk.Frame):
         self.name2["text"] = username
         score = user.get_score()
         self.score2["text"] = score
+        prog = user.get_progress()
+        self.prog2["text"] = f"Level {prog}"
+
     def settings(self):
         print(NotImplemented)
 
@@ -401,7 +409,7 @@ class LevelSelectionPage(tk.Frame):
 
         self.levels = {}
         for i in range(5):
-            self.levels[i] = tk.Button(self, text = f"Level {i}", command = lambda : self.level(i), font = main.small_button_font, state=tk.DISABLED)
+            self.levels[i] = tk.Button(self, text = f"Level {i}", command = (lambda x: lambda : self.level(x))(i), font = main.small_button_font, state=tk.DISABLED)
             self.levels[i].place(x = X//2 - 40, y = Y//2 - 140 + i*60, width = 80, height = 25)
 
     def get_progress(self, event):
@@ -412,8 +420,10 @@ class LevelSelectionPage(tk.Frame):
     def level(self, level_id):
         self.main.show_page(BlankPage.id)
         mode = 0 # pass mode
-        score, grade = GameController.game(mode, level_id)
+        grade, score = GameController.game(mode, level_id)
+        print (f"level: {level_id}")
         print(score, grade)
+        user.add_score(score)
         if grade not in FAIL:
             # passed, update user progress
             progress = max(user.get_progress(), level_id+1)
@@ -423,7 +433,7 @@ class LevelSelectionPage(tk.Frame):
         self.main.show_page(ResultPage.id)
 
 class ResultPage(tk.Frame):
-    # TODO
+    # DONE
     id = 9
 
     def __init__(self, parent, main):
@@ -441,19 +451,19 @@ class ResultPage(tk.Frame):
         self.msg = tk.StringVar()
 
         self.grade_label = tk.Label(self, textvariable = self.grade, font = main.title_font)
-        self.score_label = tk.Label(self, textvariable = self.score, font = main.label_font)
+        self.score_label = tk.Label(self, textvariable = self.score, font = main.title_font)
         self.msg_label = tk.Label(self, textvariable = self.msg, font = main.label_font)
 
-        self.grade_label.pack()
-        self.score_label.pack()
-        self.msg_label.pack()
+        self.grade_label.place(x = X//2 - 50, y = Y//2 - 200, width = 100, height = 100)
+        self.score_label.place(x = X//2 - 50, y = Y//2 - 70, width = 100, height = 100)
+        self.msg_label.place(x = X//2 - 400, y = Y//2 + 60 , width = 800, height = 40)
 
 
         self.pass_msg = "Congratulations!\nYou did a great job to unlock the next level!"
         self.fail_msg = "Try again, you can do better"
 
         self.cont_button = tk.Button(self, text = "OK", command = lambda : main.show_page(LevelSelectionPage.id), font = main.button_font)
-        self.cont_button.pack()
+        self.cont_button.place(x = X//2 - 40, y = Y//2 + 160, width = 80, height = 40)
 
     def on_raise(self, event):
         score, grade = self.main.get_score_and_grade()
@@ -463,7 +473,6 @@ class ResultPage(tk.Frame):
             self.msg.set(self.fail_msg)
         else:
             self.msg.set(self.pass_msg)
-            # TODO: deal with leaderboard and progress (or should this be done within GameController?)
         
 
 class BlankPage(tk.Frame):

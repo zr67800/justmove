@@ -86,11 +86,11 @@ class Detector:
                 points.append(None)
 
         # logging
-        print("detector: ", end='  ')
-        for i in points:
+        #print("detector: ", end='  ')
+        #for i in points:
             #if i is not None:
                 print(i,end=',')
-        print()
+        #print()
 
         return points
 
@@ -148,11 +148,11 @@ class Grader:
         key_points = self._normalise(key_points)
 
         if key_points is None: #cannot be normalised
-            print("_evaluate_frame: cannot normalise")
+            #print("_evaluate_frame: cannot normalise")
             return 0
-        print("_evaluate_frame: normalise success! ")
-        print(f"    {key_points}")
-        print(f"    {targets}")
+        #print("_evaluate_frame: normalise success! ")
+        #print(f"    {key_points}")
+        #print(f"    {targets}")
         points_in_use = [0,1,2,3,4,5,6,7,8,10,11,12,14]
         n = len(points_in_use)
 
@@ -184,15 +184,15 @@ class Grader:
                 else:
                     score += sum(self.scores[i])/len(self.scores[i])
         self.score = score
-        return score
+        return int(score)
     
     def get_grade(self):
         n = len(self.actions)
         if self.score >= n*9:
             return "A"
-        elif self.score >= n*7:
+        elif self.score >= n*5:
             return "B"
-        elif self.score >= n*3:
+        elif self.score >= n*2:
             return "C"
         else:
             return "F"
@@ -270,6 +270,7 @@ def game(mode, id):
     # id define the level/training target
     # They are passed to game data feeders, and has nothing to do with this game controller
 
+    print("GAME",mode, id)
     # read info from game data:
     game_data = GameDataLoader(mode, id)
 
@@ -316,8 +317,11 @@ def game(mode, id):
     score = grader.get_score()
     grade = grader.get_grade()
     print(grader.scores)
+
+    cv2.destroyAllWindows()
+
     return (grade, score)
-    
+
 
 if __name__ == "__main__":
     print(game(1,1))

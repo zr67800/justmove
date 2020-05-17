@@ -97,7 +97,8 @@ class UserManager:
         self._load()
         res = []
         for username in self.working_data:
-            res.append([username, self.working_data[username]["score"]])
+            if username != "-":
+                res.append([username, self.working_data[username]["score"]])
         res.sort(key = lambda x: x[1], reverse = True)
         return res
 

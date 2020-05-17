@@ -279,8 +279,9 @@ class TrainingModePage(tk.Frame):
         # 1: arm, 2: thigh
         self.main.show_page(BlankPage.id)
         mode = 1 # training mode
-        score, grade = GameController.game(mode, id)
+        grade, score = GameController.game(mode, id)
         print(score, grade)
+        user.add_score(score)
         self.main.set_score_and_grade(score, grade)
         self.main.show_page(ResultPage.id)
         
@@ -456,7 +457,7 @@ class ResultPage(tk.Frame):
 
         self.grade_label.place(x = X//2 - 50, y = Y//2 - 200, width = 100, height = 100)
         self.score_label.place(x = X//2 - 50, y = Y//2 - 70, width = 100, height = 100)
-        self.msg_label.place(x = X//2 - 400, y = Y//2 + 60 , width = 800, height = 40)
+        self.msg_label.place(x = X//2 - 400, y = Y//2 + 60 , width = 800, height = 90)
 
 
         self.pass_msg = "Congratulations!\nYou did a great job to unlock the next level!"

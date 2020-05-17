@@ -144,7 +144,6 @@ class Grader:
         return points
 
     def _evaluate_frame(self,key_points, targets):
-        # TODO
         key_points = self._normalise(key_points)
 
         if key_points is None: #cannot be normalised
@@ -236,9 +235,9 @@ class VideoProcessor:
             partB = pair[1]
             #print(points[partA],points[partB],end='')
             if points[partA] and points[partB]:
-                cv2.line(frame, points[partA], points[partB], colour, 3, lineType=cv2.LINE_AA)
-                cv2.circle(frame, points[partA], 8, colour, thickness=-1, lineType=cv2.FILLED)
-                cv2.circle(frame, points[partB], 8, colour, thickness=-1, lineType=cv2.FILLED)
+                cv2.line(frame, points[partA], points[partB], colour, 10, lineType=cv2.LINE_AA)
+                cv2.circle(frame, points[partA], 12, colour, thickness=-1, lineType=cv2.FILLED)
+                cv2.circle(frame, points[partB], 12, colour, thickness=-1, lineType=cv2.FILLED)
         self.current_frame = frame
 
     def _bg_remove(self):
